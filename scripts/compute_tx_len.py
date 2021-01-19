@@ -1,39 +1,45 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-transcriptStart = dict()
-transcriptEnd = dict()
+"""
+The compute_tx_len.py program written for Python 3 computes the genomic size of
+a transcript (exon + intron).
+"""
 
 import re
 
 
-def GetTxGenomicLength(input_file=None):
-    fileHandler = open(input_file)
-    for line in fileHandler:
-        Token = line.split("\t")
-        start = int(Token[3])  # le début de l'élément courant
-        end = int(Token[4])  # la fin de l'élément courant
-        # L'identifiant du transcrit
+def get_tx_genomic_length(input_file=None):
+    """ This function computes the genomic size of each transcript presents in a
+     GTF file.
 
-        txID = re.search('transcript_id "([^"]+)"', Token[8]).group(1)
+    :param input_file: GTF file as input
+    :return: print: transcript id and its length
+    """
+    transcript_start = dict()
+    transcript_end = dict()
+    file_handler = open(input_file)
+    for line in file_handler:
+        token = line.split("\t")
+        start = int(token[3])  # start of the current element
+        end = int(token[4])  # end of the current element
+        # identifier of the transcript
 
-        if txID not in transcriptStart:
+        tx_id = re.search('transcript_id "([^"]+)"', token[8]).group(1)
 
-            transcriptStart[txID] = start
-            transcriptEnd[txID] = end
-
+        if tx_id not in transcript_start:
+            transcript_start[tx_id] = start
+            transcript_end[tx_id] = end
         else:
+            if start < transcript_start[tx_id]:
+                transcript_start[tx_id] = start
+                if end > transcript_end[tx_id]:
+                    transcript_end[tx_id] = end
 
-            if start < transcriptStart[txID]:
-
-                transcriptStart[txID] = start
-
-                if end > transcriptEnd[txID]:
-                    transcriptEnd[txID] = end
-
-    for txID in transcriptStart:
-        print(txID + "\t" + str(transcriptEnd[txID] - transcriptStart[txID] + 1))
+    for tx_id in transcript_start:
+        print(tx_id + "\t" + str(transcript_end[tx_id] - transcript_start[tx_id]
+                                 + 1))
 
 
 if __name__ == '__main__':
-    GetTxGenomicLength(input_file='../pymetacline/data/gtf/simple.gtf')
+    get_tx_genomic_length(input_file='../pymetacline/data/gtf/simple.gtf')
